@@ -5,3 +5,4 @@ export const router = Router();
 
 router.get("/", controller.index);
 router.get("/fetch-user-data", controller.fetchUser);
+router.post("/update-user-data", controller.updateUser);
