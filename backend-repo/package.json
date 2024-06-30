@@ -11,7 +11,8 @@
         "watch-ts": "tsc -w",
         "type:check": "tsc --noEmit",
         "prettier:check": "yarn run-prettier -c",
-        "prettier:format": "yarn run-prettier --write"
+        "prettier:format": "yarn run-prettier --write",
+        "start:emulator": "npm run build-ts && firebase emulators:start --only functions"
     },
     "author": "Ridho Purnomo",
     "license": "ISC",

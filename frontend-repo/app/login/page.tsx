@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React, { useState, useRef } from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -13,33 +12,52 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
-
-function Copyright(props: any) {
-  return (
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      align="center"
-      {...props}
-    >
-      {"Copyright © "}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
-    </Typography>
-  );
-}
+import { useRouter } from "next/navigation";
+import { auth } from "@/config/firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import Alert from "@mui/material/Alert";
+import { setCookie } from "cookies-next";
 
 export default function Login() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const router = useRouter();
+  const [isSubmit, setIsSubmit] = useState(false);
+  const messageRef = useRef<{ type: "success" | "error"; message: string }>();
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    setIsSubmit(true);
+
     event.preventDefault();
+
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+
+    const email = data.get("email");
+    const password = data.get("password");
+
+    signInWithEmailAndPassword(auth, email as string, password as string)
+      .then((userCredential) => {
+        const user = userCredential.user as any;
+        if (user) {
+          messageRef.current = {
+            type: "success",
+            message: "Success login",
+          };
+          setIsSubmit(false);
+          setCookie(process.env.userCookie as string, user.accessToken, {
+            maxAge: 60 * 6 * 24,
+          });
+          return router.push("/");
+        }
+
+        return null;
+      })
+      .catch((error) => {
+        if (error)
+          messageRef.current = {
+            type: "error",
+            message: error.message,
+          };
+        setIsSubmit(false);
+      });
   };
 
   return (
@@ -59,6 +77,11 @@ export default function Login() {
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
+        {messageRef.current?.type && !isSubmit && (
+          <Alert severity={messageRef.current?.type} sx={{ mt: 3 }}>
+            {messageRef.current?.message}
+          </Alert>
+        )}
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <TextField
             margin="normal"
@@ -87,6 +110,7 @@ export default function Login() {
           <Button
             type="submit"
             fullWidth
+            disabled={isSubmit}
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
           >
@@ -106,7 +130,6 @@ export default function Login() {
           </Grid>
         </Box>
       </Box>
-      <Copyright sx={{ mt: 8, mb: 4 }} />
     </Container>
   );
 }

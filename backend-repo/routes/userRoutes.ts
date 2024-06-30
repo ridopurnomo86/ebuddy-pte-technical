@@ -1,8 +1,9 @@
 import { Router } from "express";
 import * as controller from "../controllers/api";
+import { requireAuth } from "../middlewares/authMiddleware";
 
 export const router = Router();
 
 router.get("/", controller.index);
-router.get("/fetch-user-data", controller.fetchUser);
-router.post("/update-user-data", controller.updateUser);
+router.get("/fetch-user-data", [requireAuth], controller.fetchUser);
+router.post("/update-user-data", [requireAuth], controller.updateUser);
